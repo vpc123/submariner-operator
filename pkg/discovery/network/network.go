@@ -133,6 +133,11 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 		return calicoClusterNet, err
 	}
 
+	flanelNet, err := discoverFlannelNetwork(clientSet)
+	if err != nil || flanelNet != nil {
+		return flanelNet, err
+	}
+
 	return nil, nil
 }
 
