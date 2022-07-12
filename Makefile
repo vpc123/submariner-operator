@@ -51,16 +51,10 @@ endif
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
-override E2E_ARGS += --settings $(SETTINGS) cluster1 cluster2
+override E2E_ARGS += cluster1 cluster2
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += test internal/env
 override VALIDATE_ARGS += --skip-dirs pkg/client
-
-# Process extra flags from the `using=a,b,c` optional flag
-
-ifneq (,$(filter lighthouse,$(_using)))
-override DEPLOY_ARGS += --deploytool_broker_args '--components service-discovery,connectivity'
-endif
 
 GO ?= go
 GOARCH = $(shell $(GO) env GOARCH)
@@ -131,8 +125,12 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 # Targets to make
 
-e2e: $(VENDOR_MODULES) deploy
-	scripts/kind-e2e/e2e.sh $(E2E_ARGS)
+e2e: $(VENDOR_MODULES)
+	scripts/test/e2e.sh $(E2E_ARGS)
+
+# [system-test] runs system level tests that validate the operator is properly deployed
+system-test:
+	scripts/test/system.sh
 
 clean:
 	rm -f bin/submariner-operator
@@ -271,7 +269,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard
+.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard system-test
 
 else
 
